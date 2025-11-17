@@ -52,20 +52,26 @@ app.post('/update-name', async (req, res) => {
   }
 });
 
-// Replace the old /add-xp route with this one
+// REPLACE YOUR CURRENT /add-xp ROUTE WITH THIS ONE
 app.get('/add-xp', async (req, res) => {
   try {
     const amount = parseInt(req.query.amount) || 50;
     const player = await Player.findOneAndUpdate(
       {},
       { $inc: { xp: amount } },
-      { new: true, upsert: true }
+      { new: true, upsert: true, setDefaultsOnInsert: true }
     );
-    res.send(`🏆 Gained ${amount} XP! Total: ${player.xp} XP`);
+    // Make sure name is set if it's the first player
+    if (!player.name) player.name = 'Hero';
+    await player.save();
+    res.json({ xp: player.xp, name: player.name });  // Return JSON so frontend can use it
   } catch (err) {
+    console.error(err);
     res.status(500).send('XP error');
   }
 });
+
+
 
 // QUEST #2: DRINK WATER
 app.get('/drink-water', async (req, res) => {
