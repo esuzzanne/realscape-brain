@@ -52,22 +52,18 @@ app.post('/update-name', async (req, res) => {
   }
 });
 
-// MAGIC DOOR: ADD XP
+// Replace the old /add-xp route with this one
 app.get('/add-xp', async (req, res) => {
   try {
-    const player = await Player.findOne({}); // Find any player
-    if (!player) {
-      const newPlayer = new Player({ name: 'Hero', xp: 0 });
-      await newPlayer.save();
-      newPlayer.xp += 50;
-      await newPlayer.save();
-      return res.send(`🏆 Hero gained 50 XP! Total: ${newPlayer.xp} XP`);
-    }
-    player.xp += 50;
-    await player.save();
-    res.send(`🏆 ${player.name} gained 50 XP! Total: ${player.xp} XP`);
+    const amount = parseInt(req.query.amount) || 50;
+    const player = await Player.findOneAndUpdate(
+      {},
+      { $inc: { xp: amount } },
+      { new: true, upsert: true }
+    );
+    res.send(`🏆 Gained ${amount} XP! Total: ${player.xp} XP`);
   } catch (err) {
-    res.send('XP error: ' + err);
+    res.status(500).send('XP error');
   }
 });
 
