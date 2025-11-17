@@ -45,10 +45,6 @@ app.get('/', (req, res) => {
 
 
 
-
-
-
-
 app.use(express.json()); // ADD IF NOT ALREADY THERE
 
 // SAVE PLAYER NAME
@@ -67,75 +63,17 @@ app.post('/update-name', async (req, res) => {
 });
 
 
-app.listen(5000, () => {
-  console.log('Brain is listening on port 5000');
-
-
-
-
-
-// MAGIC DOOR: ADD XP
-app.get('/add-xp', async (req, res) => {
-  try {
-    const player = await Player.findOne({ name: 'Hero' });
-    if (!player) {
-      return res.send('Hero not found!');
-    }
-    player.xp += 50;
-    await player.save();
-    res.send(`🏆 Hero gained 50 XP! Total: ${player.xp} XP`);
-  } catch (err) {
-    res.send('XP error: ' + err);
-  }
-});
-
-
-
-// QUEST #2: DRINK WATER
-app.get('/drink-water', async (req, res) => {
-  try {
-    const player = await Player.findOne({ name: 'Hero' });
-    player.xp += 20;
-    await player.save();
-    res.send(`💧 Hero drank water! +20 XP → Total: ${player.xp} XP`);
-  } catch (err) {
-    res.send('Quest error: ' + err);
-  }
-});
-
-
-
-
 // ADD QUEST TO LOG
-app.post('/log-quest', async (req, res) => {
-  try {
-    const { questName, xp } = req.body;
-    const player = await Player.findOne({});
-    if (!player.questLog) player.questLog = [];
-    player.questLog.push({
-      name: questName,
-      xp: xp,
-      timestamp: new Date()
-    });
-    await player.save();
-    res.json({ success: true });
-  } catch (err) {
-    res.status(500).json({ success: false });
-  }
-});
+app.post('/log-quest', async (req, res) => { ... }
 
 // GET QUEST LOG
-app.get('/get-quest-log', async (req, res) => {
-  try {
-    const player = await Player.findOne({});
-    res.json(player?.questLog || []);
-  } catch (err) {
-    res.json([]);
-  }
+app.get('/get-quest-log', async (req, res) => { ... }
+
+// ←←←← THIS MUST BE LAST ←←←←
+app.listen(5000, () => {
+  console.log('Brain is listening on port 5000');
 });
 
 
-
-});
 
 
