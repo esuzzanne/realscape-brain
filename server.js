@@ -7,10 +7,12 @@ app.use(cors());
 app.use(express.json()); // Body parsing — must be early!
 
 // CONNECT BRAIN TO CHEST
-const dbKey = 'mongodb+srv://esuzzanne:wqI28JiekVsXRYsE@cluster0.xxxxx.mongodb.net/realscape?retryWrites=true&w=majority';
+const dbKey = 'mongodb+srv://esuzzanne:wqI28JiekVsXRYsE@realscape.xxhfxya.mongodb.net/realscape?retryWrites=true&w=majority';
+
 mongoose.connect(dbKey)
   .then(() => console.log('Treasure chest connected!'))
   .catch(err => console.log('Chest error:', err));
+
 
 // PLAYER BLUEPRINT
 const playerSchema = new mongoose.Schema({
