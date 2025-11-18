@@ -1,19 +1,20 @@
+// server.js  ← save exactly as "server.js" in your realscape-brain folder
 const express = require('express');
-const mongoose = require('mongoose;
+const mongoose = require('mongoose');
 const cors = require('cors');
-const app = express();
 
+const app = express();
 app.use(cors());
 app.use(express.json());
 
-// YOUR ATLAS STRING — 100% CORRECT
+// YOUR ATLAS STRING (already correct)
 const dbKey = 'mongodb+srv://esuzzanne:wqI28JiekVsXRYsE@realscape.xxhfxya.mongodb.net/realscape?retryWrites=true&w=majority';
 
-mongoose.connect(dbKey)
-  .then(() => console.log('Treasure chest connected!'))
-  .catch(err => console.log('Chest error:', err));
+mongoose.connect(dbKey, { useNewUrlParser: true, useUnifiedTopology: true })
+  .then(() => console.log('Atlas connected'))
+  .catch(err => console.error('Atlas error:', err));
 
-// PLAYER SCHEMA — FIXED WITH DEFAULTS
+// PLAYER SCHEMA
 const playerSchema = new mongoose.Schema({
   name: { type: String, default: 'Hero' },
   xp: { type: Number, default: 0 },
@@ -21,39 +22,25 @@ const playerSchema = new mongoose.Schema({
 });
 const Player = mongoose.model('Player', playerSchema);
 
-// HOME
-app.get('/', (req, res) => res.send('RealScape Brain = ALIVE!'));
+// ROUTES
+app.get('/', (req, res) => res.send('RealScape Brain ALIVE'));
 
-// GET PLAYER (creates if not exists)
 app.get('/get-player', async (req, res) => {
   try {
     let player = await Player.findOne({});
-    if (!player) {
-      player = new Player({});
-      await player.save();
-    }
+    if (!player) player = await new Player().save();
     res.json({ name: player.name, xp: player.xp });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+  } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// UPDATE NAME
 app.post('/update-name', async (req, res) => {
   try {
     const { name } = req.body;
-    const player = await Player.findOneAndUpdate(
-      {},
-      { name },
-      { new: true, upsert: true }
-    );
-    res.json({ success: true, name: player.name });
-  } catch (err) {
-    res.status(500).json({ success: false });
-  }
+    const player = await Player.findOneAndUpdate({}, { name }, { new: true, upsert: true });
+    res.json({ name: player.name });
+  } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// ADD XP — FINAL WORKING VERSION
 app.get('/add-xp', async (req, res) => {
   try {
     const amount = parseInt(req.query.amount) || 50;
@@ -62,16 +49,13 @@ app.get('/add-xp', async (req, res) => {
       { $inc: { xp: amount } },
       { new: true, upsert: true }
     );
-    if (!player.name) player.name = 'Hero';
-    await player.save();
-    res.json({ xp: player.xp, name: player.name });
-  } catch (err) {
-    console.error('XP error:', err);
-    res.status(500).json({ error: 'XP error' });
+    res.json({ xp: player.xp, name: player.name || 'Hero' });
+  } catch (e) {
+    console.error(e);
+    res.status(500).send('XP error');
   }
 });
 
-// LOG QUEST
 app.post('/log-quest', async (req, res) => {
   try {
     const { questName, xp } = req.body;
@@ -81,24 +65,15 @@ app.post('/log-quest', async (req, res) => {
       { upsert: true }
     );
     res.json({ success: true });
-  } catch (err) {
-    res.status(500).json({ success: false });
-  }
+  } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// GET QUEST LOG
 app.get('/get-quest-log', async (req, res) => {
   try {
     const player = await Player.findOne({});
     res.json(player?.questLog || []);
-  } catch (err) {
-    res.json([]);
-  }
+  } catch (e) { res.json([]); }
 });
 
-// FOR VERCEL SERVERLESS — THIS LINE IS REQUIRED
+// THIS LINE IS REQUIRED FOR VERCEL
 module.exports = app;
-
-// OPTIONAL LOCAL PORT (harmless on Vercel)
-const port = process.env.PORT || 5000;
-app.listen(port, () => console.log(`Listening on port ${port}`));
